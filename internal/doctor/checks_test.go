@@ -1,13 +1,65 @@
 package doctor
 
 import (
+	"encoding/json"
+	"io"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"github.com/unbound-force/replicator/internal/config"
 	"github.com/unbound-force/replicator/internal/db"
 )
+
+// jsonRPCHandler returns an http.HandlerFunc that accepts JSON-RPC 2.0 POST
+// requests and responds with a success result. Validates method, content type,
+// and JSON-RPC protocol fields for regression protection.
+func jsonRPCHandler() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
+
+		if ct := r.Header.Get("Content-Type"); ct != "application/json" {
+			http.Error(w, "wrong content type", http.StatusUnsupportedMediaType)
+			return
+		}
+
+		body, err := io.ReadAll(r.Body)
+		if err != nil {
+			http.Error(w, "bad request", http.StatusBadRequest)
+			return
+		}
+
+		var req map[string]any
+		if err := json.Unmarshal(body, &req); err != nil {
+			http.Error(w, "invalid json", http.StatusBadRequest)
+			return
+		}
+
+		if req["jsonrpc"] != "2.0" {
+			http.Error(w, "invalid jsonrpc version", http.StatusBadRequest)
+			return
+		}
+		if req["method"] == nil {
+			http.Error(w, "missing method", http.StatusBadRequest)
+			return
+		}
+
+		id, _ := req["id"].(float64)
+		resp := map[string]any{
+			"jsonrpc": "2.0",
+			"result":  map[string]any{"status": "healthy"},
+			"id":      int(id),
+		}
+		w.Header().Set("Content-Type", "application/json")
+		if err := json.NewEncoder(w).Encode(resp); err != nil {
+			http.Error(w, "encode error", http.StatusInternalServerError)
+		}
+	}
+}
 
 func testStore(t *testing.T) *db.Store {
 	t.Helper()
@@ -22,11 +74,8 @@ func testStore(t *testing.T) *db.Store {
 func TestRun_AllChecks(t *testing.T) {
 	store := testStore(t)
 
-	// Mock Dewey as healthy.
-	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(`{"status": "healthy"}`))
-	}))
+	// Mock Dewey as healthy JSON-RPC endpoint.
+	srv := httptest.NewServer(jsonRPCHandler())
 	defer srv.Close()
 
 	cfg := &config.Config{
@@ -91,33 +140,72 @@ func TestCheckDatabase_Closed(t *testing.T) {
 }
 
 func TestCheckDewey_Healthy(t *testing.T) {
-	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusOK)
-	}))
+	srv := httptest.NewServer(jsonRPCHandler())
 	defer srv.Close()
 
 	result := checkDewey(srv.URL)
+	if result.Name != "dewey" {
+		t.Errorf("name = %q, want %q", result.Name, "dewey")
+	}
 	if result.Status != "pass" {
-		t.Errorf("status = %q, want %q", result.Status, "pass")
+		t.Errorf("status = %q, want %q (message: %s)", result.Status, "pass", result.Message)
+	}
+	if !strings.Contains(result.Message, "Dewey is reachable") {
+		t.Errorf("message = %q, want it to contain %q", result.Message, "Dewey is reachable")
+	}
+	if result.Duration <= 0 {
+		t.Error("duration should be positive")
 	}
 }
 
 func TestCheckDewey_Unreachable(t *testing.T) {
 	result := checkDewey("http://127.0.0.1:1")
+	if result.Name != "dewey" {
+		t.Errorf("name = %q, want %q", result.Name, "dewey")
+	}
 	if result.Status != "warn" {
 		t.Errorf("status = %q, want %q for unreachable Dewey", result.Status, "warn")
+	}
+	if !strings.Contains(result.Message, "not reachable") {
+		t.Errorf("message = %q, want it to contain %q", result.Message, "not reachable")
 	}
 }
 
 func TestCheckDewey_HTTPError(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusInternalServerError)
+		http.Error(w, "internal server error", http.StatusInternalServerError)
 	}))
 	defer srv.Close()
 
 	result := checkDewey(srv.URL)
+	if result.Name != "dewey" {
+		t.Errorf("name = %q, want %q", result.Name, "dewey")
+	}
 	if result.Status != "warn" {
 		t.Errorf("status = %q, want %q for HTTP 500", result.Status, "warn")
+	}
+	if !strings.Contains(result.Message, "not reachable") {
+		t.Errorf("message = %q, want it to contain %q", result.Message, "not reachable")
+	}
+}
+
+func TestCheckDewey_RPCError(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		resp := `{"jsonrpc":"2.0","error":{"code":-32601,"message":"method not found"},"id":1}`
+		w.Header().Set("Content-Type", "application/json")
+		w.Write([]byte(resp))
+	}))
+	defer srv.Close()
+
+	result := checkDewey(srv.URL)
+	if result.Name != "dewey" {
+		t.Errorf("name = %q, want %q", result.Name, "dewey")
+	}
+	if result.Status != "warn" {
+		t.Errorf("status = %q, want %q for JSON-RPC error", result.Status, "warn")
+	}
+	if !strings.Contains(result.Message, "not reachable") {
+		t.Errorf("message = %q, want it to contain %q", result.Message, "not reachable")
 	}
 }
 
@@ -138,9 +226,7 @@ func TestCheckConfigDir(t *testing.T) {
 func TestCheckResult_StatusValues(t *testing.T) {
 	// Verify that all results use valid status values.
 	store := testStore(t)
-	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusOK)
-	}))
+	srv := httptest.NewServer(jsonRPCHandler())
 	defer srv.Close()
 
 	cfg := &config.Config{DeweyURL: srv.URL}

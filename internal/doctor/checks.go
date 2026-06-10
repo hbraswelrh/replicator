@@ -7,7 +7,6 @@ package doctor
 
 import (
 	"fmt"
-	"net/http"
 	"os"
 	"os/exec"
 	"strings"
@@ -15,6 +14,7 @@ import (
 
 	"github.com/unbound-force/replicator/internal/config"
 	"github.com/unbound-force/replicator/internal/db"
+	"github.com/unbound-force/replicator/internal/memory"
 )
 
 // CheckResult holds the outcome of a single health check.
@@ -89,13 +89,13 @@ func checkDatabase(store *db.Store) CheckResult {
 }
 
 // checkDewey verifies the Dewey semantic search endpoint is reachable.
-// Uses a simple HTTP GET -- a non-200 response is a warning, not a failure,
-// because Dewey is optional for core operations.
+// Sends a JSON-RPC 2.0 POST to the dewey_health method via memory.Client.
+// A failure is a warning, not an error, because Dewey is optional for core operations.
 func checkDewey(deweyURL string) CheckResult {
 	start := time.Now()
 
-	client := &http.Client{Timeout: 5 * time.Second}
-	resp, err := client.Get(deweyURL)
+	client := memory.NewClient(deweyURL)
+	err := client.Health()
 	elapsed := time.Since(start)
 
 	if err != nil {
@@ -103,16 +103,6 @@ func checkDewey(deweyURL string) CheckResult {
 			Name:     "dewey",
 			Status:   "warn",
 			Message:  fmt.Sprintf("Dewey not reachable at %s: %v", deweyURL, err),
-			Duration: elapsed,
-		}
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		return CheckResult{
-			Name:     "dewey",
-			Status:   "warn",
-			Message:  fmt.Sprintf("Dewey returned HTTP %d at %s", resp.StatusCode, deweyURL),
 			Duration: elapsed,
 		}
 	}
