@@ -1,6 +1,6 @@
 module github.com/unbound-force/replicator
 
-go 1.25.7
+go 1.25.12
 
 require (
 	github.com/charmbracelet/lipgloss v1.1.0

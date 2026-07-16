@@ -89,7 +89,9 @@ non-negotiable.
 - **CI Parity Gate**: Before marking any task complete, run
   the CI-equivalent checks locally. Read
   `.github/workflows/` for the exact commands -- do not
-  rely on memory. Any failure blocks the task.
+  rely on memory. Any failure blocks the task. The CI
+  `Build and Test` check includes `govulncheck` for
+  vulnerability scanning of Go dependencies.
 - **Intent Drift Detection**: Implementation must faithfully
   capture the spec's intent. The parity test suite verifies
   response shapes match the TypeScript version.
