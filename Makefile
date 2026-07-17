@@ -1,4 +1,4 @@
-.PHONY: build test lint vet clean serve check release install
+.PHONY: build test coverage lint vet clean serve check release install
 
 VERSION ?= $(shell git describe --tags --always --dirty 2>/dev/null || echo "dev")
 COMMIT  ?= $(shell git rev-parse --short HEAD 2>/dev/null || echo "unknown")
@@ -9,7 +9,11 @@ build:
 	go build $(LDFLAGS) -o bin/replicator ./cmd/replicator
 
 test:
-	go test ./... -count=1
+	go test ./... -count=1 -race -coverprofile=coverage.out
+
+coverage:
+	go test ./... -count=1 -race -coverprofile=coverage.out
+	go tool cover -func=coverage.out
 
 vet:
 	go vet ./...

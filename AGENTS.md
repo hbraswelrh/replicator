@@ -381,6 +381,7 @@ make vet      # Go vet
 make check    # Vet + test
 make serve    # Build and run MCP server
 make release  # GoReleaser dry-run
+make coverage # Run tests with race detection and print coverage report
 make install  # Install to GOPATH/bin
 ```
 

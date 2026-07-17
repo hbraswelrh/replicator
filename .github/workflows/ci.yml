@@ -33,7 +33,64 @@ jobs:
           govulncheck ./...
 
       - name: Test
-        run: go test ./... -count=1 -race
+        run: go test ./... -count=1 -race -coverprofile=coverage.out
+
+      - name: Enforce Coverage Ratchets
+        run: |
+          # Guard: coverage profile must exist and be non-empty
+          if [ ! -s coverage.out ]; then
+            echo "::error::No coverage profile found — cannot enforce ratchets"
+            exit 1
+          fi
+
+          FAILED=0
+
+          # --- Global coverage floor ---
+          GLOBAL_COV=$(go tool cover -func=coverage.out | grep '^total:' | awk '{print substr($3, 1, length($3)-1)}')
+          if [ -z "$GLOBAL_COV" ]; then
+            echo "::error::Could not parse global coverage from coverage.out"
+            exit 1
+          fi
+          echo "Global coverage: ${GLOBAL_COV}%"
+          if (( $(echo "$GLOBAL_COV < 55.0" | bc -l) )); then
+            echo "::error::Global coverage ${GLOBAL_COV}% is below the 55% threshold."
+            exit 1
+          fi
+
+          # --- Per-package coverage ratchets ---
+          declare -A THRESHOLDS=(
+            ["internal/memory"]=85
+            ["internal/query"]=80
+            ["internal/doctor"]=80
+            ["internal/forge"]=80
+            ["internal/stats"]=80
+            ["internal/comms"]=80
+            ["internal/org"]=80
+            ["internal/agentkit"]=80
+            ["internal/gitutil"]=80
+            ["internal/ui"]=75
+            ["internal/mcp"]=70
+          )
+
+          for PKG in "${!THRESHOLDS[@]}"; do
+            THRESHOLD=${THRESHOLDS[$PKG]}
+            PKG_COV=$(go tool cover -func=coverage.out \
+              | grep "github.com/unbound-force/replicator/${PKG}" \
+              | awk '{print substr($3, 1, length($3)-1)}' \
+              | awk '{t+=$1; c++} END {if(c>0) printf "%.1f", t/c; else print "0.0"}')
+            if (( $(echo "$PKG_COV < $THRESHOLD" | bc -l) )); then
+              echo "::error::${PKG} coverage ${PKG_COV}% is below the ${THRESHOLD}% threshold."
+              FAILED=1
+            else
+              echo "${PKG}: ${PKG_COV}% >= ${THRESHOLD}% ✓"
+            fi
+          done
+
+          if [ "$FAILED" -eq 1 ]; then
+            exit 1
+          fi
+
+          echo "All coverage ratchets passed."
 
       - name: Build
         run: go build -o bin/replicator ./cmd/replicator
