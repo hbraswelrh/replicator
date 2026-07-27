@@ -5,23 +5,16 @@ information.
 
 ## Reporting a Vulnerability
 
-To report a vulnerability, either:
+Report vulnerabilities privately through GitHub's built-in
+[security advisory reporting](https://docs.github.com/en/code-security/security-advisories/guidance-on-reporting-and-writing-information-about-vulnerabilities/privately-reporting-a-security-vulnerability):
 
-1. **(Preferred)** Report it on GitHub directly by following the procedure
-   described
-   [here](https://docs.github.com/en/code-security/security-advisories/guidance-on-reporting-and-writing-information-about-vulnerabilities/privately-reporting-a-security-vulnerability)
-   and:
+1. Navigate to the Security tab on the repository
+2. Click on "Advisories"
+3. Click on "Report a vulnerability"
+4. Detail the issue (see below for examples of useful information to include)
 
-   - Navigate to the Security tab on the repository
-   - Click on "Advisories"
-   - Click on "Report a vulnerability"
-   - Detail the issue (see below for examples of useful information to
-     include)
-
-2. If private vulnerability reporting is unavailable, open a
-   [GitHub issue](https://github.com/unbound-force/replicator/issues) with the
-   label `security` and include only a high-level summary -- do not include
-   exploit details in public issues.
+**Do not open public issues for security vulnerabilities.** Public issues risk
+exposing exploit details before a fix is available.
 
 ### What to Include
 
