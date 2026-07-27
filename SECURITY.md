@@ -5,13 +5,19 @@ information.
 
 ## Reporting a Vulnerability
 
-Report vulnerabilities privately through GitHub's built-in
-[security advisory reporting](https://docs.github.com/en/code-security/security-advisories/guidance-on-reporting-and-writing-information-about-vulnerabilities/privately-reporting-a-security-vulnerability):
+To report a vulnerability, either:
 
-1. Navigate to the Security tab on the repository
-2. Click on "Advisories"
-3. Click on "Report a vulnerability"
-4. Detail the issue (see below for examples of useful information to include)
+1. **(Preferred)** Report it privately through GitHub's built-in
+   [security advisory reporting](https://docs.github.com/en/code-security/security-advisories/guidance-on-reporting-and-writing-information-about-vulnerabilities/privately-reporting-a-security-vulnerability):
+
+   - Navigate to the Security tab on the repository
+   - Click on "Advisories"
+   - Click on "Report a vulnerability"
+   - Detail the issue (see below for examples of useful information to include)
+
+2. Send an email to
+   [`unbound-force-maintainers@googlegroups.com`](mailto:unbound-force-maintainers@googlegroups.com)
+   detailing the issue and impacted project(s).
 
 **Do not open public issues for security vulnerabilities.** Public issues risk
 exposing exploit details before a fix is available.
