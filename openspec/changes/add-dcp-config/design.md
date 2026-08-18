@@ -39,7 +39,7 @@ Check for `.opencode/dcp.jsonc` first, then `.opencode/dcp.json`. If neither exi
 
 ### D4: Return single `ScaffoldResult`
 
-`ScaffoldDCP()` returns `(ScaffoldResult, error)` with the same `Path`/`Action` shape used by `Scaffold()`. Actions: "created" (fresh), "skipped" (already has protectTags), "updated" (merged protectTags into existing file). This aligns with **Observable Quality** — consistent, machine-parseable output.
+`ScaffoldDCP()` returns `(ScaffoldResult, error)` with the same `Path`/`Action` shape used by `Scaffold()`. Actions: "created" (fresh), "skipped" (already has protectTags), "overwritten" (replaced file with canonical config). This aligns with **Observable Quality** — consistent, machine-parseable output.
 
 ### D5: DCP config content matches replicator's own `.opencode/dcp.jsonc`
 
@@ -75,7 +75,7 @@ The doctor check uses the same `strings.Contains` approach as `ScaffoldDCP()` fo
 
 ### D10: Update strategy replaces file content entirely
 
-When `ScaffoldDCP()` encounters an existing config file without `protectTags`, the "updated" action replaces the entire file with the canonical DCP config content (from D5). This is simpler and safer than attempting to merge into an arbitrary JSONC structure, which could produce invalid JSON. The trade-off is that user customizations beyond `protectTags` are lost — but DCP configs are typically simple, and the non-goal of "supporting custom DCP config beyond `protectTags: true`" makes this acceptable.
+When `ScaffoldDCP()` encounters an existing config file without `protectTags`, the "overwritten" action replaces the entire file with the canonical DCP config content (from D5). This is simpler and safer than attempting to merge into an arbitrary JSONC structure, which could produce invalid JSON. The trade-off is that user customizations beyond `protectTags` are lost — but DCP configs are typically simple, and the non-goal of "supporting custom DCP config beyond `protectTags: true`" makes this acceptable.
 
 ### D11: Both files exist — prefer `.jsonc`
 

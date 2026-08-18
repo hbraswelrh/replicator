@@ -57,7 +57,7 @@ The function is independently callable — it does not require `Scaffold()` to r
 
 **Assessment**: PASS
 
-`ScaffoldDCP()` returns a `ScaffoldResult` with `Path` and `Action` fields (created/skipped/updated), matching the existing pattern used by `Scaffold()`. The init command renders these results using the same styled output. The DCP config file uses the standard JSON schema reference for validation.
+`ScaffoldDCP()` returns a `ScaffoldResult` with `Path` and `Action` fields (created/skipped/overwritten), matching the existing pattern used by `Scaffold()`. The init command renders these results using the same styled output. The DCP config file uses the standard JSON schema reference for validation.
 
 ### IV. Testability
 

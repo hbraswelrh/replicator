@@ -20,7 +20,7 @@ The `agentkit` package MUST export a `ScaffoldDCP(targetDir string) (ScaffoldRes
 
 - **GIVEN** a target directory with `.opencode/dcp.jsonc` that does not contain `"protectTags"`
 - **WHEN** `ScaffoldDCP(targetDir)` is called
-- **THEN** the file MUST be replaced with the canonical DCP config content (including `protectTags: true`), and the result action MUST be "updated"
+- **THEN** the file MUST be replaced with the canonical DCP config content (including `protectTags: true`), and the result action MUST be "overwritten"
 
 #### Scenario: Both `.dcp.jsonc` and `.dcp.json` exist
 
@@ -43,7 +43,7 @@ The scaffolded `.opencode/dcp.jsonc` MUST contain:
 
 ### Requirement: Init command integration
 
-The `replicator init` command MUST call `ScaffoldDCP()` after `Scaffold()` and render the DCP result using the same styled output (green for created, dim for skipped, yellow for updated).
+The `replicator init` command MUST call `ScaffoldDCP()` after `Scaffold()` and render the DCP result using the same styled output (green for created, dim for skipped, yellow for overwritten).
 
 #### Scenario: `replicator init` on a fresh directory
 
@@ -59,7 +59,7 @@ The `replicator init` command MUST call `ScaffoldDCP()` after `Scaffold()` and r
 
 ### Requirement: ScaffoldDCP result shape
 
-`ScaffoldDCP()` MUST return `(ScaffoldResult, error)` where `ScaffoldResult` has `Path` (string) and `Action` (string) fields. The `Action` field MUST be one of: "created", "skipped", "updated".
+`ScaffoldDCP()` MUST return `(ScaffoldResult, error)` where `ScaffoldResult` has `Path` (string) and `Action` (string) fields. The `Action` field MUST be one of: "created", "skipped", "overwritten".
 
 ### Requirement: `.opencode/` directory creation
 
