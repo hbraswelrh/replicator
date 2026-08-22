@@ -62,10 +62,10 @@ SHA. A file-wide `grep` cannot distinguish
 corrupt v0.5.0 cask cleared the gate. This closes the previously unmet
 requirement from `fix-homebrew-sha-mismatch`.
 
-**D4: Use `index()` rather than a regex match for the SHA.** The SHA is
-already validated as `^[0-9a-f]{64}$` upstream, so regex metacharacters
-cannot appear. `index()` nonetheless removes the possibility of the value
-being interpreted as a pattern, at no cost in clarity.
+**D4: Compare the SHA as a literal string.** Extract the quoted value from
+the structurally validated `sha256` line, normalize its surrounding syntax,
+and compare it to the computed SHA using awk string equality. The value is
+never interpreted as a regular-expression pattern.
 
 **D5: Supersede rather than rewrite.** The false assumption in
 `fix-homebrew-sha-mismatch/tasks.md` stays as-is. That change is an accurate
