@@ -13,10 +13,10 @@ this project adheres to [Semantic Versioning](https://semver.org/).
   next `sha256` line, but the cask emits each stanza's `sha256` before its
   `url` — so darwin's checksum was written onto the `linux_amd64` line while
   darwin kept its stale pre-signing value. This broke `brew install` on both
-  macOS arm64 and Linux amd64 in v0.5.0. The patch step now binds the marker
-  to the nearest preceding `sha256` line, fails loudly when the cask layout
-  does not match, and verifies the SHA landed inside the `darwin_arm64`
-  stanza rather than anywhere in the file.
+  macOS arm64 and Linux amd64 in v0.5.0. A tested integrity script now
+  requires exactly one darwin URL immediately preceded by its `sha256`,
+  cross-checks the release manifest, fails closed on layout drift, and runs
+  its regression fixtures in pull-request CI.
   (Fixes [#87](https://github.com/unbound-force/replicator/issues/87))
 - TOCTOU gap between macOS code signing and cask publication. Extracted cask
   publishing from `sign-macos` into a dedicated `publish-cask` job that
