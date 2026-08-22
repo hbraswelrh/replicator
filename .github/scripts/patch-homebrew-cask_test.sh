@@ -5,7 +5,6 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
 PATCHER="$SCRIPT_DIR/patch-homebrew-cask.sh"
 FIXTURE="$SCRIPT_DIR/testdata/replicator-v0.5.0.rb"
 ARCHIVE_NAME="replicator_0.5.0_darwin_arm64.tar.gz"
-LINUX_AMD64_SHA="db3f96fcd316e33fc8b0b4f6805ee07313f5338fa13c46889fc8473d7a5f9852"
 LINUX_ARM64_SHA="d35cf51192f4bc3eb92d32c2a63304fdbc561243a2bb8e406d0a5c7f9d1a83f1"
 
 fail() {
@@ -41,21 +40,20 @@ assert_failure_preserves_cask() {
   if "$PATCHER" \
     "$CASE_DIR/$ARCHIVE_NAME" \
     "$CASE_DIR/checksums.txt" \
-    "$CASE_DIR/replicator.rb" >/dev/null 2>&1; then
+    "$CASE_DIR/replicator.rb" >"$CASE_DIR/stdout" 2>"$CASE_DIR/stderr"; then
     fail "$1: expected failure"
   fi
+  grep -q '^::error::' "$CASE_DIR/stderr" || \
+    fail "$1: failure did not emit an ::error:: annotation"
   cmp -s "$CASE_DIR/before.rb" "$CASE_DIR/replicator.rb" || \
     fail "$1: original cask changed on failure"
 }
 
 new_case happy
 assert_success
-grep -q "sha256 \"$ARCHIVE_SHA\"" "$CASE_DIR/replicator.rb" || \
-  fail "happy: darwin SHA was not patched"
-grep -q "sha256 \"$LINUX_AMD64_SHA\"" "$CASE_DIR/replicator.rb" || \
-  fail "happy: linux_amd64 SHA changed"
-grep -q "sha256 \"$LINUX_ARM64_SHA\"" "$CASE_DIR/replicator.rb" || \
-  fail "happy: linux_arm64 SHA changed"
+sed "7c\\      sha256 \"$ARCHIVE_SHA\"" "$FIXTURE" > "$CASE_DIR/expected.rb"
+cmp -s "$CASE_DIR/expected.rb" "$CASE_DIR/replicator.rb" || \
+  fail "happy: patched cask differs from exact expected fixture"
 
 new_case stray-comment
 printf '\n# note: darwin_arm64 builds are notarized\n' >> "$CASE_DIR/replicator.rb"

@@ -51,8 +51,8 @@
   and confirm the checked-in regression suite requires both Linux checksums
   to remain unchanged.
 
-- [x] 4.3 Run `actionlint` with ShellCheck integration over both workflows
-  and the checked-in integrity scripts.
+- [x] 4.3 Run `actionlint` with ShellCheck integration over both workflows,
+  and run `shellcheck` directly over both checked-in integrity scripts.
 
 - [x] 4.4 Run `make check` and `make check-coverage` to confirm no incidental
   Go breakage.

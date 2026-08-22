@@ -62,8 +62,15 @@ if ! awk -v arm64="$ARCHIVE_SHA" '
   { lines[NR] = $0 }
   /^[[:space:]]*url "[^"]*darwin_arm64[^"]*"/ {
     count++
-    if (lines[NR - 1] !~ ("^[[:space:]]*sha256 \"" arm64 "\"[[:space:]]*$")) {
+    sha_line = lines[NR - 1]
+    if (sha_line !~ /^[[:space:]]*sha256 "[0-9a-f]+"[[:space:]]*$/) {
       bad = 1
+    } else {
+      sub(/^[[:space:]]*sha256 "/, "", sha_line)
+      sub(/"[[:space:]]*$/, "", sha_line)
+      if (sha_line != arm64) {
+        bad = 1
+      }
     }
   }
   END { exit (count == 1 && !bad) ? 0 : 1 }

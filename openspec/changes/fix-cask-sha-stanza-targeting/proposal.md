@@ -83,7 +83,8 @@ Four changes to the release pipeline:
   template and self-heals both platforms.
 - **v0.5.0**: remains broken in the tap until a subsequent release or a
   manual tap correction. Out of scope for this change.
-- **No Go source code changes.** CI's `Build and Test` job is unaffected.
+- **No Go source code changes.** The `Build and Test` job gains one shell
+  regression step; its existing Go gates are unchanged.
 
 ## Constitution Alignment
 
@@ -94,7 +95,8 @@ Assessed against the Replicator project constitution
 
 **Assessment**: N/A
 
-This change modifies a single CI workflow step. No MCP tools, tool output
+This change modifies the release workflow, adds one test step to CI, and
+adds checked-in integrity scripts and fixtures. No MCP tools, tool output
 shapes, or inter-agent communication paths are affected.
 
 ### II. Composability First
