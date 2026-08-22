@@ -200,8 +200,8 @@ jobs:
 
   publish-cask:
     name: Publish Homebrew Cask
-    # No checkout needed — all inputs come from GitHub Release
-    # assets (downloaded via gh) and the homebrew-tap repo (cloned separately).
+    # Release inputs come from GitHub assets; checkout provides the tested
+    # cask integrity script used by both this job and pull-request CI.
     runs-on: ubuntu-latest
     needs: [preflight, release, sign-macos]
     if: >-
@@ -214,30 +214,27 @@ jobs:
     env:
       RELEASE_TAG: ${{ needs.preflight.outputs.tag }}
     steps:
-      - name: Download final darwin archive and compute SHA
-        id: sha
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+
+      - name: Download final darwin archive and release manifest
         run: |
           set -euo pipefail
           VERSION="${RELEASE_TAG#v}"
 
           gh release download "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" \
             --pattern "replicator_*_darwin_arm64.tar.gz" --dir ./artifacts
+          gh release download "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" \
+            --pattern "checksums.txt" --dir ./artifacts
 
           ARCHIVE="./artifacts/replicator_${VERSION}_darwin_arm64.tar.gz"
           if [ ! -f "$ARCHIVE" ]; then
             echo "::error::darwin_arm64 archive not found in release assets"
             exit 1
           fi
-
-          ARM64_SHA=$(shasum -a 256 "$ARCHIVE" | awk '{print $1}')
-
-          if [[ ! "$ARM64_SHA" =~ ^[0-9a-f]{64}$ ]]; then
-            echo "::error::Computed SHA is not a valid 64-character hex string: $ARM64_SHA"
+          if [ ! -f "./artifacts/checksums.txt" ]; then
+            echo "::error::checksums.txt not found in release assets"
             exit 1
           fi
-
-          echo "darwin_arm64 SHA256: $ARM64_SHA"
-          echo "arm64_sha=$ARM64_SHA" >> "$GITHUB_OUTPUT"
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -257,31 +254,12 @@ jobs:
       - name: Patch cask with actual SHA
         run: |
           set -euo pipefail
+          VERSION="${RELEASE_TAG#v}"
+          ARCHIVE="./artifacts/replicator_${VERSION}_darwin_arm64.tar.gz"
           CASK_FILE="./cask-staging/replicator.rb"
 
-          if [ -z "$ARM64_SHA" ]; then
-            echo "::error::arm64_sha output is empty — SHA computation step may have failed"
-            exit 1
-          fi
-
-          awk -v arm64="$ARM64_SHA" '
-            /darwin_arm64/ { found_arm64=1 }
-            /sha256/ && found_arm64 {
-              sub(/sha256 "[^"]*"/, "sha256 \"" arm64 "\"")
-              found_arm64=0
-            }
-            { print }
-          ' "$CASK_FILE" > "${CASK_FILE}.patched"
-          mv "${CASK_FILE}.patched" "$CASK_FILE"
-
-          if ! grep -q "sha256 \"$ARM64_SHA\"" "$CASK_FILE"; then
-            echo "::error::SHA patching failed — expected SHA not found in darwin_arm64 section of cask file"
-            exit 1
-          fi
-
-          echo "Cask patched successfully with darwin_arm64 SHA: $ARM64_SHA"
-        env:
-          ARM64_SHA: ${{ steps.sha.outputs.arm64_sha }}
+          .github/scripts/patch-homebrew-cask.sh \
+            "$ARCHIVE" ./artifacts/checksums.txt "$CASK_FILE"
 
       - name: Push to Homebrew tap
         run: |

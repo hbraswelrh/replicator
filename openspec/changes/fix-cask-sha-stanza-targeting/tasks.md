@@ -12,30 +12,30 @@
 
 ## 1. Implement tested cask integrity patching
 
-- [ ] 1.1 Add `.github/scripts/patch-homebrew-cask.sh` to compute the
+- [x] 1.1 Add `.github/scripts/patch-homebrew-cask.sh` to compute the
   downloaded archive SHA, require exactly one matching release-manifest
   entry, patch exactly one darwin URL stanza's immediately preceding
   `sha256`, and verify the result.
 
-- [ ] 1.2 Make every invalid input fail closed with an `::error::`
+- [x] 1.2 Make every invalid input fail closed with an `::error::`
   annotation, preserve the original cask on failure, and remove temporary
   output on every exit path.
 
-- [ ] 1.3 Update `publish-cask` to check out the repository with the existing
+- [x] 1.3 Update `publish-cask` to check out the repository with the existing
   verified, SHA-pinned `actions/checkout` reference, download the archive,
   manifest, and cask, then invoke the checked-in script.
 
 ## 2. Add automated regression coverage
 
-- [ ] 2.1 Add the clean v0.5.0 GoReleaser cask template as a test fixture.
+- [x] 2.1 Add the clean v0.5.0 GoReleaser cask template as a test fixture.
 
-- [ ] 2.2 Add dependency-free shell tests covering: successful patch with
+- [x] 2.2 Add dependency-free shell tests covering: successful patch with
   both Linux checksums unchanged; missing darwin URL; URL-before-sha256;
-  stray darwin comment; duplicate darwin URL; missing, duplicate, and
-  mismatched manifest entries; and preservation of the original cask on
-  every invalid case.
+  stray and trailing darwin comments; duplicate darwin URL; a stale checksum
+  candidate from another stanza; missing, duplicate, and mismatched manifest
+  entries; and preservation of the original cask on every invalid case.
 
-- [ ] 2.3 Add the shell regression suite to the `Build and Test` CI job.
+- [x] 2.3 Add the shell regression suite to the `Build and Test` CI job.
 
 ## 3. Documentation
 
@@ -45,18 +45,19 @@
 
 ## 4. Verification
 
-- [ ] 4.1 Run the checked-in cask integrity regression suite.
+- [x] 4.1 Run the checked-in cask integrity regression suite.
 
-- [ ] 4.2 Confirm the new verifier rejects the corrupt v0.5.0 cask that the
-  previous file-wide `grep` accepted.
+- [x] 4.2 Reproduce the v0.5.0 wrong-stanza corruption with the old algorithm
+  and confirm the checked-in regression suite requires both Linux checksums
+  to remain unchanged.
 
-- [ ] 4.3 Run `actionlint` with ShellCheck integration over both workflows
+- [x] 4.3 Run `actionlint` with ShellCheck integration over both workflows
   and the checked-in integrity scripts.
 
-- [ ] 4.4 Run `make check` and `make check-coverage` to confirm no incidental
+- [x] 4.4 Run `make check` and `make check-coverage` to confirm no incidental
   Go breakage.
 
-- [ ] 4.5 Verify constitution alignment: Composability First (Homebrew
+- [x] 4.5 Verify constitution alignment: Composability First (Homebrew
   install works on both affected platforms from the next release),
   Observable Quality (mispatches fail in PR CI and at release time), and
   Testability (the exact production script has dependency-free fixture

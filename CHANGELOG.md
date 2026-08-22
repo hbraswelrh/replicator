@@ -8,10 +8,21 @@ this project adheres to [Semantic Versioning](https://semver.org/).
 ## Unreleased
 
 ### Fixed
-- Homebrew cask SHA-256 mismatch after macOS code signing replaces release
-  archive. Extracted cask publishing from `sign-macos` into a dedicated
-  `publish-cask` job that computes the SHA from the final release artifact,
-  eliminating the TOCTOU gap between signing and cask publication.
+- Homebrew cask published with checksums on the wrong stanza. The
+  `publish-cask` job scanned forward from the `darwin_arm64` marker for the
+  next `sha256` line, but the cask emits each stanza's `sha256` before its
+  `url` — so darwin's checksum was written onto the `linux_amd64` line while
+  darwin kept its stale pre-signing value. This broke `brew install` on both
+  macOS arm64 and Linux amd64 in v0.5.0. The patch step now binds the marker
+  to the nearest preceding `sha256` line, fails loudly when the cask layout
+  does not match, and verifies the SHA landed inside the `darwin_arm64`
+  stanza rather than anywhere in the file.
+  (Fixes [#87](https://github.com/unbound-force/replicator/issues/87))
+- TOCTOU gap between macOS code signing and cask publication. Extracted cask
+  publishing from `sign-macos` into a dedicated `publish-cask` job that
+  computes the SHA from the final release artifact. Shipped in v0.5.0; note
+  that Homebrew installs remained broken until the stanza-targeting fix
+  above.
   (Fixes [#81](https://github.com/unbound-force/replicator/issues/81))
 
 ### Added
