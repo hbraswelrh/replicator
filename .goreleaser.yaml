@@ -31,6 +31,7 @@ checksum:
   name_template: checksums.txt
 
 release:
+  prerelease: auto
   extra_files:
     - glob: dist/homebrew/Casks/replicator.rb
 
