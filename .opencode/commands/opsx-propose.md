@@ -131,8 +131,8 @@ After completing all artifacts, summarize:
   creates artifacts ONLY (proposal, design, specs,
   tasks)
 - **NEVER commit, push, or create PRs** — those are
-  /finale's responsibility
-- **NEVER run /opsx-apply or /cobalt-crush** — the
+  /uf.finale's responsibility
+- **NEVER run /opsx-apply or /uf.cobalt-crush** — the
   user decides when to implement
 - After artifacts are complete, STOP and prompt the
-  user to run /opsx-apply or /cobalt-crush
+  user to run /opsx-apply or /uf.cobalt-crush
