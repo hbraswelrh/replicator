@@ -614,7 +614,7 @@ For each file:
 
 - **NEVER modify source code** — this command updates
   spec artifacts ONLY. Implementation changes belong in
-  `/speckit.implement`, `/unleash`, or `/cobalt-crush`.
+  `/speckit.implement`, `/uf.unleash`, or `/uf.cobalt-crush`.
 - **NEVER modify test files, Go source, Markdown agents,
   convention packs, or config files** outside the
   `specs/NNN-*/` feature directory.
@@ -833,7 +833,7 @@ For each target file:
 
 Your job is done. Report the results and prompt the
 user. The user will invoke a separate command
-(`/speckit.implement`, `/unleash`, or `/cobalt-crush`)
+(`/speckit.implement`, `/uf.unleash`, or `/uf.cobalt-crush`)
 when they are ready to implement.
 ```
 

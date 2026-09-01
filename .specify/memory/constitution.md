@@ -91,7 +91,7 @@ environment-dependent.
   Speckit: `NNN-<name>`. OpenSpec: `opsx/<name>`.
 - **Code Review**: Every PR MUST receive review. When the
   review council is available, agents MUST run
-  `/review-council` and receive APPROVE before PR
+  `/uf.review-council` and receive APPROVE before PR
   submission.
 - **CI Parity Gate**: Before marking any task complete,
   agents MUST run the CI-equivalent commands locally
