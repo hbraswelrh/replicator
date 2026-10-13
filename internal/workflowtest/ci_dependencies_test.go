@@ -209,7 +209,7 @@ func TestFullsendZizmorException_IsNarrowAndDocumented(t *testing.T) {
 rules:
   dangerous-triggers:
     ignore:
-      - .github/workflows/fullsend.yaml
+      - fullsend.yaml
 `
 	if config != wantConfig {
 		t.Fatalf("zizmor configuration = %q, want only the documented Fullsend dangerous-triggers exception", config)

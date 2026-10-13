@@ -3,4 +3,4 @@
 rules:
   dangerous-triggers:
     ignore:
-      - .github/workflows/fullsend.yaml
+      - fullsend.yaml
