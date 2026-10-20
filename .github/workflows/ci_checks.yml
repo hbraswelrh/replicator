@@ -25,7 +25,7 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
-# org-infra reusable_ci.yml@0c784711926c9864f027ec565fd7c06a382d80f8
+# org-infra reusable_ci.yml@bd3718a218d649b093269fe4a979c4a4632dfad2
 # has no internal concurrency block; caller-level concurrency is intentional.
 
 jobs:
